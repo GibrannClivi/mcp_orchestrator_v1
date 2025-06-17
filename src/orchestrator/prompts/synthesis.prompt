@@ -1,0 +1,5 @@
+# Synthesis Prompt
+<query_plan>{query_plan}</query_plan>
+<raw_data>{raw_data}</raw_data>
+
+You are an AI orchestrator. Synthesize a natural language answer using only the information in <query_plan> and <raw_data>. Respond in strict JSON format with fields: answer, sources, confidence.

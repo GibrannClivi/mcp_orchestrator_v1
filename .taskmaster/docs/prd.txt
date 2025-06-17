@@ -1,44 +1,69 @@
 # Overview
-[Provide a high-level overview of your product here. Explain what problem it solves, who it's for, and why it's valuable.]
+The MCP Orchestrator is a high-performance backend API that acts as an AI-driven orchestrator for business operations. It receives structured requests from a frontend, uses Google's Gemma model via Vertex AI to interpret user queries, fetches data from multiple backend MCP microservices (e.g., Chargebee, HubSpot, Firebase), and returns a synthesized JSON response. This backend serves only a JSON API and does not provide any HTML or UI. It is designed for rapid, scalable deployment on Google Cloud Run.
 
 # Core Features
-[List and describe the main features of your product. For each feature, include:
-- What it does
-- Why it's important
-- How it works at a high level]
+- **/query Endpoint**: Accepts POST requests with a user's natural language query and email, returning a synthesized answer, sources, confidence, cache status, and timestamp.
+- **LLM Integration**: Uses Google Vertex AI (Gemma model) for query analysis and synthesis.
+- **Microservice Communication**: Connects to multiple MCP microservices, each exposing a POST /mcp/call endpoint.
+- **Multi-Layered Caching**: Implements Firestore (L1) and in-memory (L2) caching for performance and cost efficiency.
+- **Configurable Model**: Model name and other settings are loaded from environment variables.
+- **Prompt Security**: All LLM prompts are stored in external files and use defensive prompting techniques.
+- **Async I/O**: All blocking calls are wrapped with asyncio.to_thread for maximum performance.
 
 # User Experience
-[Describe the user journey and experience. Include:
-- User personas
-- Key user flows
-- UI/UX considerations]
+- **Persona**: Backend developers and product teams integrating AI-driven orchestration into their SaaS products.
+- **Flow**: Frontend sends a POST /query with a question and email; receives a fast, reliable JSON response with answer, sources, and metadata.
+- **No UI**: All interaction is via JSON API.
 
 # Technical Architecture
-[Outline the technical implementation details:
-- System components
-- Data models
-- APIs and integrations
-- Infrastructure requirements]
+- **Language**: Python 3.11+
+- **Framework**: FastAPI
+- **Containerization**: Docker
+- **Deployment**: Google Cloud Run
+- **AI Engine**: Google Vertex AI (Gemma)
+- **Secrets**: Google Secret Manager (prod)
+- **Caching**: Firestore (L1), cachetools (L2)
+- **Microservices**: Each MCP service (e.g., chargebee, hubspot, firebase) runs in its own Docker container and exposes POST /mcp/call.
+- **Common Library**: mcp-servers/common/ for shared Pydantic models and FastAPI utilities.
+- **Config**: All settings from environment variables using python-dotenv. No hardcoded secrets.
+- **Error Handling**: Structured JSON errors, 200 OK with error body, full server-side logging.
 
 # Development Roadmap
-[Break down the development process into phases:
-- MVP requirements
-- Future enhancements
-- Do not think about timelines whatsoever -- all that matters is scope and detailing exactly what needs to be build in each phase so it can later be cut up into tasks]
+- **MVP**:
+  - Orchestrator FastAPI app with /query endpoint
+  - Vertex AI integration (Gemma model)
+  - Firestore and in-memory caching
+  - At least two MCP microservices (e.g., chargebee, hubspot) with /mcp/call
+  - Shared common library for Pydantic models/utilities
+  - Dockerization for orchestrator and microservices
+  - .env.example for all config
+  - CORS enabled for prototype (allow_origins=["*"])
+- **Future Enhancements**:
+  - JWT authentication for /query
+  - Production CORS lockdown
+  - More MCP microservices
+  - Advanced error analytics and observability
+  - Automated dependency and vulnerability checks
 
 # Logical Dependency Chain
-[Define the logical order of development:
-- Which features need to be built first (foundation)
-- Getting as quickly as possible to something usable/visible front end that works
-- Properly pacing and scoping each feature so it is atomic but can also be built upon and improved as development approaches]
+1. Setup Python project, Docker, and FastAPI skeleton
+2. Implement /query endpoint and CORS
+3. Integrate Vertex AI (Gemma) with external prompt files
+4. Implement Firestore and in-memory caching
+5. Build two MCP microservices with /mcp/call and shared common library
+6. Add .env.example and config loading
+7. Add error handling and logging
+8. Dockerize all services
+9. Prepare for deployment on Google Cloud Run
 
 # Risks and Mitigations
-[Identify potential risks and how they'll be addressed:
-- Technical challenges
-- Figuring out the MVP that we can build upon
-- Resource constraints]
+- **Vertex AI API changes**: Use environment variables for model/config, keep SDK up to date
+- **Blocking I/O**: Enforce async/await and wrap blocking calls with asyncio.to_thread
+- **Secrets exposure**: Use Google Secret Manager in production, never hardcode secrets
+- **Cache consistency**: Use Firestore for L1, in-memory for L2, with clear invalidation logic
+- **Security**: Add JWT and CORS lockdown before production
 
 # Appendix
-[Include any additional information:
-- Research findings
-- Technical specifications]
+- **References**: See mcporchestratorrules.mdc for all architectural and code quality requirements
+- **Prompts**: All LLM prompts to be stored in orchestrator/prompts/
+- **Testing**: All code must be fully type-hinted, tested, and formatted with ruff

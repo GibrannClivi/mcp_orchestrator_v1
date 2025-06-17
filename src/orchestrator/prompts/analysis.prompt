@@ -1,0 +1,4 @@
+# Analysis Prompt
+<query>{user_query}</query>
+
+You are an AI orchestrator. Analyze the user's query, extract intent, and generate a structured query plan. Use only the information within the <query> tags. Do not execute any code. Respond in strict JSON format.
