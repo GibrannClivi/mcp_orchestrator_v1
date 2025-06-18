@@ -11,4 +11,4 @@ class MCPRequest(BaseModel):
 
 class MCPResponse(BaseModel):
     data: Any = Field(..., description="Raw data from the MCP service.")
-    error: str = Field(None, description="Error message, if any.")
+    error: str | None = Field(None, description="Error message, if any.")
