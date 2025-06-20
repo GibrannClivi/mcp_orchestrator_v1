@@ -12,3 +12,14 @@ class MCPRequest(BaseModel):
 class MCPResponse(BaseModel):
     data: Any = Field(..., description="Raw data from the MCP service.")
     error: str | None = Field(None, description="Error message, if any.")
+
+class ChargebeeCustomer(BaseModel):
+    email: EmailStr
+    name: str
+    hubspot_crm_id: str | None
+    plan: str | None
+    payment_terms: str | None
+    next_billing_on: int | None
+    subscription_id: str
+    subscription_status: str
+    history: list
