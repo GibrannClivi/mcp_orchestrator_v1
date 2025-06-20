@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  orchestrator:
+    build:
+      context: .
+      dockerfile: scripts/docker/Dockerfile.orchestrator
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=${FIREBASE_CREDENTIALS}
+    depends_on:
+      - chargebee
+      - hubspot
+      - firebase
+    networks:
+      - default
+
+  chargebee:
+    build:
+      context: .
+      dockerfile: scripts/docker/Dockerfile.chargebee
+    ports:
+      - "8083:8083"
+    env_file:
+      - .env
+    # The container name is used for service discovery from the orchestrator
+    container_name: chargebee
+
+  hubspot:
+    build:
+      context: .
+      dockerfile: scripts/docker/Dockerfile.hubspot
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    container_name: hubspot
+
+  firebase:
+    build:
+      context: .
+      dockerfile: scripts/docker/Dockerfile.firebase
+    ports:
+      - "8084:8084"
+    env_file:
+      - .env
+    container_name: firebase 

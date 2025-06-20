@@ -4,12 +4,17 @@ Loads all settings from environment variables using python-dotenv.
 """
 import os
 from dotenv import load_dotenv
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 
 # Load .env file if present
 load_dotenv()
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False
+    )
     ENV: str = Field(default="development")
     PROJECT_NAME: str = Field(default="mcp-orchestrator")
     PORT: int = Field(default=8080)
@@ -25,9 +30,5 @@ class Settings(BaseSettings):
     CORS_ALLOW_ORIGINS: str = Field(default="*")
     LOG_LEVEL: str = Field(default="INFO")
     CACHE_TTL_SECONDS: int = Field(default=300)
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
 
 settings = Settings()

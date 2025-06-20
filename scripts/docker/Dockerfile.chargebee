@@ -1,8 +1,13 @@
 # Dockerfile for Chargebee MCP Service
 FROM python:3.11-slim
 WORKDIR /app
+
+# Copy project structure and install dependencies
+COPY pyproject.toml .
+COPY src ./src
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-COPY ./src/mcp_servers/chargebee ./src/mcp_servers/chargebee
-COPY ./src/mcp_servers/common ./src/mcp_servers/common
-CMD ["uvicorn", "src.mcp_servers.chargebee.main:app", "--host", "0.0.0.0", "--port", "8083"]
+RUN pip install -e .
+
+# The app is now run as an installed package
+CMD ["uvicorn", "mcp_servers.chargebee.main:app", "--host", "0.0.0.0", "--port", "8083"]

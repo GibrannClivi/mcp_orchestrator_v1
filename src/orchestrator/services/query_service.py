@@ -16,7 +16,7 @@ import os
 async def analyze_query_with_llm(query: str) -> Dict[str, Any]:
     # TODO: Call Vertex AI with analysis.prompt
     # For now, return a dummy query plan
-    return {"sources": ["chargebee", "hubspot"], "plan": "fetch user data from chargebee and hubspot"}
+    return {"sources": ["chargebee", "hubspot", "firebase"], "plan": "fetch user data from all services"}
 
 async def synthesize_answer_with_llm(query_plan: Dict[str, Any], raw_data: Dict[str, Any]) -> Dict[str, Any]:
     # TODO: Call Vertex AI with synthesis.prompt
@@ -28,20 +28,35 @@ def make_cache_key(query_plan: Dict[str, Any]) -> str:
     plan_str = str(query_plan).encode("utf-8")
     return hashlib.sha256(plan_str).hexdigest()
 
-async def call_mcp_service(service: str, email: str, resource: str = "user_data", params: Dict[str, Any] = None) -> Any:
-    # TODO: Service discovery/config
-    service_ports = {"chargebee": 8081, "hubspot": 8082}
-    port = service_ports.get(service)
-    if not port:
+async def call_mcp_service(service: str, email: str) -> Any:
+    service_configs = {
+        "chargebee": {"port": 8083, "endpoint": "/lookup", "method": "GET"},
+        "hubspot": {"port": 8082, "endpoint": "/mcp/call", "method": "POST"},
+        "firebase": {"port": 8084, "endpoint": "/mcp/call", "method": "POST"}
+    }
+    
+    config = service_configs.get(service)
+    if not config:
         return {"error": f"Unknown service: {service}"}
-    url = f"http://{service}:{port}/mcp/call"
-    payload = {"email": email, "resource": resource, "params": params or {}}
+
+    # Use service name as hostname, Docker Compose will resolve it
+    url = f"http://{service}:{config['port']}{config['endpoint']}"
+
     async with httpx.AsyncClient() as client:
         try:
-            resp = await client.post(url, json=payload, timeout=10)
+            if config["method"] == "GET":
+                # Assumes params are in query string, simple case for /lookup
+                resp = await client.get(url, params={"email": email}, timeout=10)
+            else: # POST
+                payload = {"email": email, "resource": "user_data", "params": {}}
+                resp = await client.post(url, json=payload, timeout=10)
+            
+            resp.raise_for_status()
             return resp.json()
+        except httpx.HTTPStatusError as e:
+            return {"error": f"HTTP error calling {service}: {e.response.status_code}", "details": str(e.response.text)}
         except Exception as e:
-            return {"error": str(e)}
+            return {"error": f"Error calling {service}: {str(e)}"}
 
 async def handle_query(body: QueryRequest) -> QueryResponse:
     # Step 1: Analyze query with LLM (get query plan)

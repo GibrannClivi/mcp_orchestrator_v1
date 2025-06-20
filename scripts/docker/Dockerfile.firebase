@@ -1,13 +1,14 @@
-# Dockerfile for HubSpot MCP Service
+# Dockerfile for Firebase MCP Service
 FROM python:3.11-slim
 WORKDIR /app
 
 # Copy project structure and install dependencies
 COPY pyproject.toml .
 COPY src ./src
+COPY scripts ./scripts
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install -e .
 
 # The app is now run as an installed package
-CMD ["uvicorn", "mcp_servers.hubspot.main:app", "--host", "0.0.0.0", "--port", "8082"]
+CMD ["uvicorn", "mcp_servers.firebase.main:app", "--host", "0.0.0.0", "--port", "8084"] 

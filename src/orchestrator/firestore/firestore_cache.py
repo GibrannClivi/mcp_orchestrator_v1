@@ -2,6 +2,7 @@
 Firestore L1 cache integration for the orchestrator.
 """
 from google.cloud import firestore
+from google.oauth2 import service_account
 from typing import Any
 import os
 
@@ -9,7 +10,14 @@ COLLECTION = os.getenv("FIRESTORE_COLLECTION", "orchestrator_cache")
 
 class FirestoreCache:
     def __init__(self, project_id: str):
-        self.client = firestore.Client(project=project_id)
+        cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if cred_path:
+            credentials = service_account.Credentials.from_service_account_file(cred_path)
+            self.client = firestore.Client(project=project_id, credentials=credentials)
+        else:
+            # Fallback to Application Default Credentials
+            self.client = firestore.Client(project=project_id)
+            
         self.collection = self.client.collection(COLLECTION)
 
     def get(self, key: str) -> Any:

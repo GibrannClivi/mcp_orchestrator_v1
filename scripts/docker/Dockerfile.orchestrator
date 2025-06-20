@@ -1,7 +1,14 @@
 # Dockerfile for MCP Orchestrator
 FROM python:3.11-slim
 WORKDIR /app
+
+# Copy project structure and install dependencies
+COPY pyproject.toml .
+COPY src ./src
+COPY scripts ./scripts
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-COPY ./src/orchestrator ./src/orchestrator
-CMD ["uvicorn", "src.orchestrator.main:app", "--host", "0.0.0.0", "--port", "8080"]
+RUN pip install -e .
+
+# The app is now run as an installed package
+CMD ["uvicorn", "orchestrator.main:app", "--host", "0.0.0.0", "--port", "8080"]
